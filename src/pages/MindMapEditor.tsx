@@ -37,8 +37,11 @@ export default function MindMapEditor() {
 
     if (data) {
       setTitle(data.title);
-      setNodes(Array.isArray(data.nodes) ? data.nodes : []);
-      setEdges(Array.isArray(data.edges) ? data.edges : []);
+      // Cast Json to any, then validate and set as Node[]/Edge[]
+      const nodesData = data.nodes as any;
+      const edgesData = data.edges as any;
+      setNodes(Array.isArray(nodesData) ? nodesData : []);
+      setEdges(Array.isArray(edgesData) ? edgesData : []);
     }
   };
 
@@ -57,15 +60,19 @@ export default function MindMapEditor() {
       if (id === 'new') {
         const { error } = await supabase.from('mind_maps').insert({
           title,
-          nodes,
-          edges,
+          nodes: nodes as any,
+          edges: edges as any,
           teacher_id: user?.id,
         });
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('mind_maps')
-          .update({ title, nodes, edges })
+          .update({ 
+            title, 
+            nodes: nodes as any, 
+            edges: edges as any 
+          })
           .eq('id', id);
         if (error) throw error;
       }
@@ -107,8 +114,31 @@ export default function MindMapEditor() {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={(changes) => !readonly && setNodes((nds) => nds)}
-          onEdgesChange={(changes) => !readonly && setEdges((eds) => eds)}
+          onNodesChange={(changes) => {
+            if (!readonly) {
+              setNodes((nds) => {
+                // Apply changes to nodes
+                return nds.map((node) => {
+                  const change = changes.find((c: any) => c.id === node.id);
+                  if (change && change.type === 'position' && change.position) {
+                    return { ...node, position: change.position };
+                  }
+                  return node;
+                });
+              });
+            }
+          }}
+          onEdgesChange={(changes) => {
+            if (!readonly) {
+              setEdges((eds) => {
+                // Filter out removed edges
+                return eds.filter((edge) => {
+                  const removeChange = changes.find((c: any) => c.id === edge.id && c.type === 'remove');
+                  return !removeChange;
+                });
+              });
+            }
+          }}
           onConnect={onConnect}
           fitView
         >
