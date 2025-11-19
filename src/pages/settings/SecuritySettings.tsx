@@ -24,15 +24,32 @@ export default function SecuritySettings() {
       return;
     }
 
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters long');
+    if (passwordData.newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update password');
+      }
+
       toast.success('Password updated successfully!');
       setPasswordData({
         currentPassword: '',
@@ -40,7 +57,8 @@ export default function SecuritySettings() {
         confirmPassword: '',
       });
     } catch (error) {
-      toast.error('Failed to update password');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update password';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

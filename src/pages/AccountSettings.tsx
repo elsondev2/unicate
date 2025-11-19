@@ -6,8 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Upload, User, Lock, Bell, Palette } from 'lucide-react';
 import { toast } from 'sonner';
-import { MobileContainer } from '@/components/MobileOptimized';
-import { uploadFile, getPublicUrl } from '@/lib/supabase';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { cn } from '@/lib/utils';
 
 export default function AccountSettings() {
@@ -21,14 +20,76 @@ export default function AccountSettings() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
     setUploading(true);
     try {
+      // Upload to Supabase Storage
       const fileName = `${user._id}-${Date.now()}.${file.name.split('.').pop()}`;
-      await uploadFile('avatars', fileName, file);
-      const url = getPublicUrl('avatars', fileName);
-      setProfileImage(url);
-      toast.success('Profile picture updated!');
+      const filePath = `${user._id}/${fileName}`;
+      
+      // Try Supabase first
+      try {
+        const { uploadFile: supabaseUpload, getPublicUrl } = await import('@/lib/supabase');
+        await supabaseUpload('avatars', filePath, file);
+        const avatarUrl = getPublicUrl('avatars', filePath);
+        
+        // Save URL to backend
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/users/avatar`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ avatar: avatarUrl }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save avatar');
+        }
+
+        setProfileImage(avatarUrl);
+        toast.success('Profile picture updated!');
+      } catch (supabaseError) {
+        // Fallback to base64 if Supabase fails
+        console.warn('Supabase upload failed, using base64 fallback:', supabaseError);
+        
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64String = reader.result as string;
+          
+          const token = localStorage.getItem('auth_token');
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/users/avatar`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ avatar: base64String }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to upload avatar');
+          }
+
+          setProfileImage(base64String);
+          toast.success('Profile picture updated!');
+        };
+        reader.readAsDataURL(file);
+      }
     } catch (error) {
+      console.error('Upload error:', error);
       toast.error('Failed to upload image');
     } finally {
       setUploading(false);
@@ -54,23 +115,14 @@ export default function AccountSettings() {
   const currentPath = location.pathname;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md shadow-sm">
-        <MobileContainer>
-          <div className="flex h-16 items-center justify-between">
-            <Button variant="outline" onClick={() => navigate('/dashboard')} size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Back to Dashboard</span>
-              <span className="sm:hidden">Back</span>
-            </Button>
-            <h1 className="text-lg sm:text-xl font-bold">Account Settings</h1>
-            <div className="w-20" /> {/* Spacer for centering */}
-          </div>
-        </MobileContainer>
-      </div>
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Account Settings</h1>
+          <p className="text-muted-foreground">Manage your account preferences and settings</p>
+        </div>
 
-      <MobileContainer className="py-6 sm:py-8">
-        <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* Profile Card - Mobile Optimized */}
           <Card className="lg:sticky lg:top-24 h-fit">
             <CardHeader className="text-center">
@@ -134,7 +186,7 @@ export default function AccountSettings() {
             <Outlet />
           </div>
         </div>
-      </MobileContainer>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

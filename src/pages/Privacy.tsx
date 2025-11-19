@@ -2,8 +2,11 @@ import { StickyHeader } from '@/components/StickyHeader';
 import { StickyFooter } from '@/components/StickyFooter';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { Card, CardContent } from '@/components/ui/card';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 export default function Privacy() {
+  useScrollToTop();
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
       <AnimatedBackground />
@@ -82,8 +85,8 @@ export default function Privacy() {
               <h2 className="text-2xl font-bold">9. Contact Us</h2>
               <p>
                 If you have questions about this privacy policy, please contact us at{' '}
-                <a href="mailto:privacy@learnhub.com" className="text-primary hover:underline">
-                  privacy@learnhub.com
+                <a href="mailto:elsonmgaya25@gmail.com" className="text-primary hover:underline">
+                  elsonmgaya25@gmail.com
                 </a>
               </p>
             </CardContent>

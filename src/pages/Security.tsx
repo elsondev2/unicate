@@ -3,8 +3,11 @@ import { StickyFooter } from '@/components/StickyFooter';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Lock, Eye, Server, Key, AlertTriangle } from 'lucide-react';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 export default function Security() {
+  useScrollToTop();
+  
   const features = [
     {
       icon: Lock,
@@ -106,8 +109,8 @@ export default function Security() {
               </ul>
               <p className="mt-6">
                 If you discover a security vulnerability, please report it to{' '}
-                <a href="mailto:security@learnhub.com" className="text-primary hover:underline">
-                  security@learnhub.com
+                <a href="mailto:elsonmgaya25@gmail.com" className="text-primary hover:underline">
+                  elsonmgaya25@gmail.com
                 </a>
               </p>
             </CardContent>

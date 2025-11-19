@@ -3,9 +3,10 @@ import { Handle, Position, NodeProps } from '@xyflow/react';
 
 export const CustomNode = memo(({ data, selected }: NodeProps) => {
   const shape = (data.shape as string) || 'default';
-  const color = (data.color as string) || '#a84370';
+  const color = (data.color as string) || '#3b82f6';
   const textColor = (data.textColor as string) || '#ffffff';
   const label = (data.label as string) || 'Node';
+  const handlePosition = (data.handlePosition as string) || 'all';
 
   const getShapeStyles = () => {
     const baseStyles = {
@@ -59,15 +60,62 @@ export const CustomNode = memo(({ data, selected }: NodeProps) => {
 
   const contentStyles = shape === 'diamond' ? { transform: 'rotate(-45deg)' } : {};
 
+  const renderHandles = () => {
+    const handleStyle = { background: color, width: '10px', height: '10px' };
+    
+    switch (handlePosition) {
+      case 'left':
+        return (
+          <>
+            <Handle type="target" position={Position.Left} style={handleStyle} />
+            <Handle type="source" position={Position.Left} style={handleStyle} />
+          </>
+        );
+      case 'right':
+        return (
+          <>
+            <Handle type="target" position={Position.Right} style={handleStyle} />
+            <Handle type="source" position={Position.Right} style={handleStyle} />
+          </>
+        );
+      case 'top':
+        return (
+          <>
+            <Handle type="target" position={Position.Top} style={handleStyle} />
+            <Handle type="source" position={Position.Top} style={handleStyle} />
+          </>
+        );
+      case 'bottom':
+        return (
+          <>
+            <Handle type="target" position={Position.Bottom} style={handleStyle} />
+            <Handle type="source" position={Position.Bottom} style={handleStyle} />
+          </>
+        );
+      default: // 'all'
+        return (
+          <>
+            <Handle type="target" position={Position.Top} style={handleStyle} />
+            <Handle type="target" position={Position.Left} style={handleStyle} />
+            <Handle type="target" position={Position.Right} style={handleStyle} />
+            <Handle type="target" position={Position.Bottom} style={handleStyle} />
+            <Handle type="source" position={Position.Top} style={handleStyle} />
+            <Handle type="source" position={Position.Left} style={handleStyle} />
+            <Handle type="source" position={Position.Right} style={handleStyle} />
+            <Handle type="source" position={Position.Bottom} style={handleStyle} />
+          </>
+        );
+    }
+  };
+
   return (
     <div style={getShapeStyles()}>
-      <Handle type="target" position={Position.Top} style={{ background: color }} />
+      {renderHandles()}
       <div style={contentStyles}>
         <div contentEditable suppressContentEditableWarning>
           {label}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} style={{ background: color }} />
     </div>
   );
 });

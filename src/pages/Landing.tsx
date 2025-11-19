@@ -22,6 +22,7 @@ import { StickyHeader } from '@/components/StickyHeader';
 import { StickyFooter } from '@/components/StickyFooter';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { smoothScrollToElement } from '@/lib/smoothScroll';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 // Memoized feature card component
 interface FeatureCardProps {
@@ -57,6 +58,7 @@ const FeatureCard = memo(({ feature, index }: FeatureCardProps) => {
 FeatureCard.displayName = 'FeatureCard';
 
 function Landing() {
+  useScrollToTop();
   const navigate = useNavigate();
 
   const handleScrollToFeatures = useCallback(() => {
@@ -106,12 +108,7 @@ function Landing() {
     { icon: Target, text: 'Goal-oriented features' }
   ], []);
 
-  const stats = useMemo(() => [
-    { number: '10K+', label: 'Active Users' },
-    { number: '50K+', label: 'Notes Created' },
-    { number: '25K+', label: 'Mind Maps' },
-    { number: '98%', label: 'Satisfaction' }
-  ], []);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 relative">
@@ -154,16 +151,15 @@ function Landing() {
             </Button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 max-w-4xl mx-auto px-4">
-            {stats.map((stat, i) => (
-              <div key={i} className="p-3 sm:p-4 rounded-lg bg-card border border-primary/20 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  {stat.number}
-                </div>
-                <div className="text-xs sm:text-sm text-muted-foreground mt-1">{stat.label}</div>
-              </div>
-            ))}
+          {/* Free Badge */}
+          <div className="flex justify-center px-4">
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border-2 border-primary/30">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                100% Free Forever
+              </span>
+              <Sparkles className="h-5 w-5 text-accent" />
+            </div>
           </div>
         </div>
       </section>

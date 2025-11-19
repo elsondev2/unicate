@@ -5,8 +5,10 @@ import { Check, Sparkles } from 'lucide-react';
 import { StickyHeader } from '@/components/StickyHeader';
 import { StickyFooter } from '@/components/StickyFooter';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 export default function Pricing() {
+  useScrollToTop();
   const navigate = useNavigate();
 
   const plans = [
@@ -75,8 +77,26 @@ export default function Pricing() {
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto mb-16">
+        {/* Free Forever Notice */}
+        <div className="max-w-3xl mx-auto mb-12 text-center">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Sparkles className="h-8 w-8 text-primary" />
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  100% Free Forever
+                </h2>
+                <Sparkles className="h-8 w-8 text-accent" />
+              </div>
+              <p className="text-lg text-muted-foreground">
+                Unicate is completely free to use. All features, unlimited storage, no hidden costs.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Feature Comparison (Hidden but kept for future) */}
+        <div className="hidden grid md:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto mb-16">
           {plans.map((plan, i) => (
             <Card
               key={i}

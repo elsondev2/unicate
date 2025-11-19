@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { EditorToolbar } from '@/components/EditorToolbar';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import * as services from '@/lib/services';
@@ -25,6 +26,7 @@ export default function NoteEditor() {
   const { user, userRole } = useAuth();
   const [title, setTitle] = useState('');
   const [saving, setSaving] = useState(false);
+  const [noteOwnerId, setNoteOwnerId] = useState<string | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -63,7 +65,7 @@ export default function NoteEditor() {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-invert focus:outline-none min-h-[500px] max-w-none p-6',
       },
     },
-    editable: userRole !== 'STUDENT',
+    editable: true, // Will be updated based on ownership
   });
 
   useEffect(() => {
@@ -81,6 +83,12 @@ export default function NoteEditor() {
       if (!data) return;
 
       setTitle(data.title);
+      setNoteOwnerId(data.user_id);
+      
+      // Set editor to read-only if user is not the owner
+      const isOwner = data.user_id === user._id.toString();
+      editor?.setEditable(isOwner);
+      
       if (data.content) {
         // Parse the content if it's a string
         let parsedContent = data.content;
@@ -128,11 +136,12 @@ export default function NoteEditor() {
     }
   };
 
-  const readonly = userRole === 'STUDENT';
+  const isOwner = user && noteOwnerId === user._id.toString();
+  const readonly = id !== 'new' && !isOwner;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 p-3 sm:p-4 md:p-6">
-      <div className="container mx-auto max-w-5xl">
+    <DashboardLayout>
+      <div className="max-w-5xl mx-auto">
         <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2">
           <Button variant="outline" onClick={() => navigate('/dashboard')} size="sm" className="sm:size-default">
             <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -145,6 +154,11 @@ export default function NoteEditor() {
               <span className="hidden xs:inline">{saving ? 'Saving...' : 'Save Note'}</span>
               <span className="xs:hidden">Save</span>
             </Button>
+          )}
+          {readonly && (
+            <div className="text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-md">
+              View Only
+            </div>
           )}
         </div>
 
@@ -172,6 +186,6 @@ export default function NoteEditor() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as api from './api';
 import { User } from './api';
+import { socketService } from './socket';
 
 interface AuthContextType {
   user: User | null;
@@ -62,6 +63,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(token);
       setUserRole(user.role);
 
+      // Initialize Socket.io connection
+      socketService.connect();
+
       toast.success('Account created successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -80,6 +84,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(token);
       setUserRole(user.role);
 
+      // Initialize Socket.io connection
+      socketService.connect();
+
       toast.success('Signed in successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -95,6 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
       setUserRole(null);
+
+      // Disconnect Socket.io
+      socketService.disconnect();
 
       toast.success('Signed out successfully');
       navigate('/auth');

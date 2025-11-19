@@ -5,11 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, User as UserIcon } from 'lucide-react';
+import { uploadFile, getPublicUrl } from '@/lib/supabase';
+import { updateProfile } from '@/lib/api';
 
 export default function ProfileSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || '');
   const [formData, setFormData] = useState({
     name: user?.name || '',
     bio: '',
@@ -17,15 +21,58 @@ export default function ProfileSettings() {
     location: '',
   });
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      // Upload to Supabase
+      const fileName = `${user?._id}-avatar-${Date.now()}.${file.name.split('.').pop()}`;
+      const path = `avatars/${fileName}`;
+      
+      await uploadFile('audio-lessons', path, file);
+      const avatarUrl = getPublicUrl('audio-lessons', path);
+      
+      // Update profile with new avatar URL
+      await updateProfile(undefined, avatarUrl);
+      
+      setAvatarPreview(avatarUrl);
+      toast.success('Avatar updated successfully!');
+      
+      // Reload page to update avatar everywhere
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      toast.error('Failed to upload avatar');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateProfile(formData.name);
       toast.success('Profile updated successfully!');
+      
+      // Reload to update name everywhere
+      setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
+      console.error('Profile update error:', error);
       toast.error('Failed to update profile');
     } finally {
       setLoading(false);
@@ -48,6 +95,38 @@ export default function ProfileSettings() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Profile Picture</Label>
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {avatarPreview ? (
+                    <img 
+                      src={avatarPreview} 
+                      alt="Avatar"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <UserIcon className="h-10 w-10 text-primary" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={uploadingAvatar}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Recommended: Square image (e.g., 200x200px). Max 5MB
+                  </p>
+                </div>
+                {uploadingAvatar && (
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                )}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>
               <Input

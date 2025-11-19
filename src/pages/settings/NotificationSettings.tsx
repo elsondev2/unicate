@@ -62,17 +62,37 @@ export default function NotificationSettings() {
     },
   ]);
 
+  const saveNotificationSettings = async (settings: any) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/users/notifications`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(settings),
+      });
+    } catch (error) {
+      console.error('Failed to save notification settings:', error);
+    }
+  };
+
   const handleEmailToggle = (id: string, enabled: boolean) => {
-    setEmailNotifications(prev =>
-      prev.map(notif => notif.id === id ? { ...notif, enabled } : notif)
+    const updated = emailNotifications.map(notif => 
+      notif.id === id ? { ...notif, enabled } : notif
     );
+    setEmailNotifications(updated);
+    saveNotificationSettings({ emailNotifications: updated });
     toast.success(enabled ? 'Email notification enabled' : 'Email notification disabled');
   };
 
   const handlePushToggle = (id: string, enabled: boolean) => {
-    setPushNotifications(prev =>
-      prev.map(notif => notif.id === id ? { ...notif, enabled } : notif)
+    const updated = pushNotifications.map(notif => 
+      notif.id === id ? { ...notif, enabled } : notif
     );
+    setPushNotifications(updated);
+    saveNotificationSettings({ pushNotifications: updated });
     toast.success(enabled ? 'Push notification enabled' : 'Push notification disabled');
   };
 

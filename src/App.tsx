@@ -16,13 +16,15 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NoteEditor from "./pages/NoteEditor";
 import AudioUpload from "./pages/AudioUpload";
-import MindMapEditor from "./pages/MindMapEditor.enhanced";
+import MindMapEditor from "./pages/MindMapEditor.mobile";
 import AccountSettings from "./pages/AccountSettings";
 import ProfileSettings from "./pages/settings/ProfileSettings";
 import SecuritySettings from "./pages/settings/SecuritySettings";
 import NotificationSettings from "./pages/settings/NotificationSettings";
 import AppearanceSettings from "./pages/settings/AppearanceSettings";
 import NotFound from "./pages/NotFound";
+import Users from "./pages/Users";
+import AudioPlayer from "./pages/AudioPlayer";
 
 const queryClient = new QueryClient();
 
@@ -43,8 +45,10 @@ const App = () => (
               <Route path="/security" element={<Security />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+              <Route path="/audio/player" element={<ProtectedRoute><AudioPlayer /></ProtectedRoute>} />
               <Route path="/notes/:id" element={<ProtectedRoute><NoteEditor /></ProtectedRoute>} />
-              <Route path="/audio/new" element={<ProtectedRoute requiredRole="TEACHER"><AudioUpload /></ProtectedRoute>} />
+              <Route path="/audio/upload" element={<ProtectedRoute requiredRole="TEACHER"><AudioUpload /></ProtectedRoute>} />
               <Route path="/mindmaps/:id" element={<ProtectedRoute><MindMapEditor /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/settings/profile" replace />} />

@@ -10,13 +10,37 @@ router.use(authenticateToken);
 router.get('/', async (req: AuthRequest, res) => {
   try {
     const db = await getDatabase();
-    // Students can see all mind maps, teachers see only their own
-    const query = req.userRole === 'STUDENT' ? {} : { user_id: req.userId };
+    const { search, myOnly } = req.query;
+    
+    let query: any = {};
+    
+    // Filter by owner if myOnly is true
+    if (myOnly === 'true') {
+      query.user_id = req.userId;
+    }
+    
+    // Search filter
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+    
     const mindMaps = await db.collection('mind_maps')
       .find(query)
       .sort({ created_at: -1 })
       .toArray();
-    res.json(mindMaps);
+    
+    // Fetch user names for each mind map
+    const mapsWithUsers = await Promise.all(
+      mindMaps.map(async (map) => {
+        const user = await db.collection('users').findOne({ _id: new ObjectId(map.user_id) });
+        return {
+          ...map,
+          user_name: user?.name || 'Unknown User'
+        };
+      })
+    );
+    
+    res.json(mapsWithUsers);
   } catch (error) {
     console.error('Get mind maps error:', error);
     res.status(500).json({ error: 'Failed to fetch mind maps' });
@@ -26,12 +50,10 @@ router.get('/', async (req: AuthRequest, res) => {
 router.get('/:id', async (req: AuthRequest, res) => {
   try {
     const db = await getDatabase();
-    // Students can view any mind map, teachers can only view their own
-    const query = req.userRole === 'STUDENT' 
-      ? { _id: new ObjectId(req.params.id) }
-      : { _id: new ObjectId(req.params.id), user_id: req.userId };
-    
-    const mindMap = await db.collection('mind_maps').findOne(query);
+    // Both students and teachers can view any mind map
+    const mindMap = await db.collection('mind_maps').findOne({ 
+      _id: new ObjectId(req.params.id) 
+    });
     
     if (!mindMap) {
       return res.status(404).json({ error: 'Mind map not found' });
@@ -58,7 +80,15 @@ router.post('/', async (req: AuthRequest, res) => {
       updated_at: new Date()
     });
     
-    res.json({ _id: result.insertedId });
+    const newMindMap = await db.collection('mind_maps').findOne({ _id: result.insertedId });
+    
+    // Emit real-time event
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('mindmap:created', newMindMap);
+    }
+    
+    res.json(newMindMap);
   } catch (error) {
     console.error('Create mind map error:', error);
     res.status(500).json({ error: 'Failed to create mind map' });
@@ -79,7 +109,15 @@ router.put('/:id', async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Mind map not found' });
     }
     
-    res.json({ success: true });
+    const updatedMindMap = await db.collection('mind_maps').findOne({ _id: new ObjectId(req.params.id) });
+    
+    // Emit real-time event
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('mindmap:updated', updatedMindMap);
+    }
+    
+    res.json(updatedMindMap);
   } catch (error) {
     console.error('Update mind map error:', error);
     res.status(500).json({ error: 'Failed to update mind map' });
@@ -96,6 +134,12 @@ router.delete('/:id', async (req: AuthRequest, res) => {
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: 'Mind map not found' });
+    }
+    
+    // Emit real-time event
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('mindmap:deleted', { _id: req.params.id });
     }
     
     res.json({ success: true });

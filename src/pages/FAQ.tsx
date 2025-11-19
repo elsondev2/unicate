@@ -3,8 +3,11 @@ import { StickyFooter } from '@/components/StickyFooter';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 export default function FAQ() {
+  useScrollToTop();
+  
   const faqs = [
     {
       category: 'Getting Started',
@@ -124,10 +127,10 @@ export default function FAQ() {
             </CardHeader>
             <CardContent className="text-center">
               <a
-                href="mailto:support@learnhub.com"
+                href="mailto:elsonmgaya25@gmail.com"
                 className="text-primary hover:underline font-medium"
               >
-                support@learnhub.com
+                elsonmgaya25@gmail.com
               </a>
             </CardContent>
           </Card>
