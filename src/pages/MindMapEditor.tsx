@@ -39,7 +39,7 @@ export default function MindMapEditor() {
           id: '1', 
           type: 'custom',
           position: { x: 250, y: 100 }, 
-          data: { label: 'Main Topic', color: '#3b82f6', shape: 'default' } 
+          data: { label: 'Main Topic', color: '#3b82f6', shape: 'default', handlePosition: 'all' } 
         },
       ]);
     }
@@ -89,6 +89,7 @@ export default function MindMapEditor() {
         label: 'New Node',
         color: nodeColor,
         shape: nodeShape,
+        handlePosition: handlePosition,
       },
     };
     setNodes((nds) => [...nds, newNode]);
