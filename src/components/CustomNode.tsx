@@ -61,7 +61,13 @@ export const CustomNode = memo(({ data, selected }: NodeProps) => {
   const contentStyles = shape === 'diamond' ? { transform: 'rotate(-45deg)' } : {};
 
   const renderHandles = () => {
-    const handleStyle = { background: color, width: '10px', height: '10px' };
+    const handleStyle = { 
+      background: '#fff', 
+      border: `2px solid ${color}`,
+      width: '14px', 
+      height: '14px',
+      transition: 'all 0.2s ease',
+    };
     
     switch (handlePosition) {
       case 'left':
