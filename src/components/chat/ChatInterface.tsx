@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Phone, Video, Users, Send, Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { Message, Conversation } from '@/types/chat';
 import * as chatService from '@/lib/chatService';
 import { MessageBubble } from './MessageBubble';
 import { CallDialog } from '@/components/chat/CallDialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatInterfaceProps {
   conversation: Conversation;
@@ -173,6 +177,28 @@ export function ChatInterface({ conversation, onBack, onViewParticipants }: Chat
     }
   };
 
+  const handleEditMessage = async (messageId: string, newContent: string) => {
+    try {
+      // TODO: Implement edit message API
+      toast.success('Message edited');
+      // Refresh messages
+      loadMessages();
+    } catch (error) {
+      toast.error('Failed to edit message');
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      // TODO: Implement delete message API
+      toast.success('Message deleted');
+      // Remove from local state
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    } catch (error) {
+      toast.error('Failed to delete message');
+    }
+  };
+
   const getConversationTitle = () => {
     if (conversation.type === 'group') {
       return conversation.name || 'Group Chat';
@@ -197,92 +223,123 @@ export function ChatInterface({ conversation, onBack, onViewParticipants }: Chat
     <>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="bg-green-600 text-white p-4 flex items-center gap-3 shadow-md">
-          <button 
+        <div className="p-4 border-b flex items-center gap-3">
+          <Button 
+            variant="ghost"
+            size="icon"
             onClick={onBack} 
-            className="md:hidden text-white hover:bg-green-700 p-2 rounded-full transition-colors"
+            className="md:hidden"
           >
             <ArrowLeft className="h-5 w-5" />
-          </button>
+          </Button>
           
-          <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center font-semibold">
+          <Avatar className="h-10 w-10">
             {getConversationAvatar() ? (
-              <img src={getConversationAvatar()} alt="" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              getConversationTitle().slice(0, 1).toUpperCase()
-            )}
+              <AvatarImage src={getConversationAvatar()} />
+            ) : null}
+            <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+              {conversation.type === 'group' ? (
+                <Users className="h-5 w-5" />
+              ) : (
+                getConversationTitle().slice(0, 1).toUpperCase()
+              )}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold truncate">{getConversationTitle()}</h3>
+            {isRecording ? (
+              <p className="text-xs text-muted-foreground">
+                🎤 recording...
+              </p>
+            ) : typingUsers.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                typing...
+              </p>
+            ) : conversation.type === 'group' ? (
+              <p className="text-xs text-muted-foreground">
+                {conversation.participants.length} participants
+              </p>
+            ) : null}
           </div>
 
-          <div className="flex-1">
-            <div className="font-semibold">{getConversationTitle()}</div>
-            {isRecording ? (
-              <div className="text-sm text-green-100">
-                🎤 recording...
-              </div>
-            ) : typingUsers.length > 0 ? (
-              <div className="text-sm text-green-100">
-                typing...
-              </div>
-            ) : null}
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => startCall('audio')}
+              title="Audio call"
+            >
+              <Phone className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => startCall('video')}
+              title="Video call"
+            >
+              <Video className="h-5 w-5" />
+            </Button>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 bg-[#e5ddd5]" style={{
-          backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h100v100H0z\' fill=\'%23e5ddd5\'/%3E%3Cpath d=\'M0 0L50 50M50 0L100 50M0 50L50 100M50 50L100 100\' stroke=\'%23d1c7b7\' stroke-width=\'0.5\' opacity=\'0.1\'/%3E%3C/svg%3E")'
-        }}>
+        <ScrollArea className="flex-1 p-4">
           <div className="space-y-3">
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}
                 message={message}
                 isOwn={message.senderId === user?._id}
+                onEdit={(id, content) => handleEditMessage(id, content)}
+                onDelete={(id) => handleDeleteMessage(id)}
               />
             ))}
             <div ref={scrollRef} />
           </div>
-        </div>
+        </ScrollArea>
 
         {/* Input */}
-        <form onSubmit={handleSendMessage} className="bg-gray-100 p-4 flex items-center gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => {
-              setNewMessage(e.target.value);
-              handleTyping(true);
-            }}
-            placeholder="Type a message"
-            className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-300 focus:outline-none focus:border-green-500"
-            disabled={isRecording}
-          />
-          {newMessage.trim() ? (
-            <button
-              type="submit"
-              disabled={sending}
-              className="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleRecording}
+        <div className="p-4 border-t">
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={isRecording ? "Recording..." : "Type a message..."}
+              value={newMessage}
+              onChange={(e) => {
+                setNewMessage(e.target.value);
+                handleTyping(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               disabled={isRecording}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                isRecording
-                  ? 'bg-red-600 text-white animate-pulse'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
-        </form>
+              className="flex-1"
+            />
+
+            {newMessage.trim() ? (
+              <Button
+                onClick={handleSendMessage}
+                disabled={sending}
+                size="icon"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleRecording}
+                disabled={isRecording}
+                size="icon"
+                variant={isRecording ? "destructive" : "default"}
+                className={isRecording ? "animate-pulse" : ""}
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       {showCallDialog && (

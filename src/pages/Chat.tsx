@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { ConversationList } from '@/components/chat/ConversationList';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { NewChatDialog } from '@/components/chat/NewChatDialog';
 import { Conversation } from '@/types/chat';
 import { MessageSquare } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export default function Chat() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -27,32 +29,42 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex bg-gray-100">
-      {/* Sidebar - Conversation List */}
-      <div className={`w-full md:w-96 bg-white border-r border-gray-200 flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
-        <ConversationList
-          onSelectConversation={setSelectedConversation}
-          onNewChat={handleNewChat}
-          onNewGroup={handleNewGroup}
-        />
-      </div>
-
-      {/* Main Chat Area */}
-      <div className={`flex-1 flex flex-col ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}>
-        {selectedConversation ? (
-          <ChatInterface
-            conversation={selectedConversation}
-            onBack={() => setSelectedConversation(null)}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500 bg-[#f0f2f5]">
-            <div className="text-center">
-              <MessageSquare className="w-24 h-24 mx-auto mb-4 text-gray-300" strokeWidth={1.5} />
-              <p className="text-xl font-medium text-gray-700">Select a chat to start messaging</p>
-              <p className="text-sm text-gray-500 mt-2">Choose a conversation from the list</p>
-            </div>
+    <DashboardLayout>
+      <div className="h-[calc(100vh-8rem)] max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+          {/* Conversation List */}
+          <div className={`${selectedConversation ? 'hidden md:block' : ''}`}>
+            <Card className="h-full flex flex-col overflow-hidden">
+              <ConversationList
+                onSelectConversation={setSelectedConversation}
+                onNewChat={handleNewChat}
+                onNewGroup={handleNewGroup}
+              />
+            </Card>
           </div>
-        )}
+
+          {/* Chat Interface */}
+          <div className={`md:col-span-2 ${!selectedConversation ? 'hidden md:flex' : ''}`}>
+            {selectedConversation ? (
+              <Card className="h-full flex flex-col overflow-hidden">
+                <ChatInterface
+                  conversation={selectedConversation}
+                  onBack={() => setSelectedConversation(null)}
+                />
+              </Card>
+            ) : (
+              <Card className="h-full flex items-center justify-center">
+                <div className="text-center p-8">
+                  <MessageSquare className="w-24 h-24 mx-auto mb-4 text-muted-foreground" strokeWidth={1.5} />
+                  <h3 className="text-xl font-semibold mb-2">Select a chat to start messaging</h3>
+                  <p className="text-muted-foreground">
+                    Choose a conversation from the list
+                  </p>
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
 
       <NewChatDialog
@@ -61,6 +73,6 @@ export default function Chat() {
         mode={chatMode}
         onSuccess={handleChatCreated}
       />
-    </div>
+    </DashboardLayout>
   );
 }

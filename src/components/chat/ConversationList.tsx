@@ -91,39 +91,37 @@ export function ConversationList({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="bg-[#00a884] text-white p-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Chats</h2>
+      <div className="p-4 border-b flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Messages</h2>
         <div className="flex gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={onNewChat}
-            className="text-white hover:bg-[#00a884]/80 rounded-full"
             title="New Chat"
           >
-            <MessageSquare className="h-5 w-5" />
+            <MessageSquare className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={onNewGroup}
-            className="text-white hover:bg-[#00a884]/80 rounded-full"
             title="New Group"
           >
-            <Users className="h-5 w-5" />
+            <Users className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Search */}
-      <div className="p-3 bg-white border-b border-gray-200">
+      <div className="p-3 border-b">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 rounded-lg bg-gray-100 border-0 focus:bg-white focus:ring-1 focus:ring-[#00a884]"
+            className="pl-9"
           />
         </div>
       </div>
@@ -131,11 +129,11 @@ export function ConversationList({
       {/* Conversations */}
       <ScrollArea className="flex-1">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-muted-foreground">
             Loading conversations...
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-muted-foreground">
             <p>{searchQuery ? 'No conversations found' : 'No chats yet'}</p>
             <p className="text-sm mt-2">Click + to start a new conversation</p>
           </div>
@@ -148,13 +146,13 @@ export function ConversationList({
                 <button
                   key={conversation.id}
                   onClick={() => onSelectConversation(conversation)}
-                  className="w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 text-left"
+                  className="w-full p-4 flex items-center gap-3 hover:bg-muted transition-colors border-b text-left"
                 >
                   <Avatar className="h-12 w-12 flex-shrink-0">
                     {getConversationAvatar(conversation) ? (
                       <AvatarImage src={getConversationAvatar(conversation)} />
                     ) : null}
-                    <AvatarFallback className="bg-[#00a884] text-white font-semibold text-lg">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-lg">
                       {conversation.type === 'group' ? (
                         <Users className="h-5 w-5" />
                       ) : (
@@ -165,11 +163,11 @@ export function ConversationList({
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className="font-semibold text-gray-900 truncate">
+                      <h4 className="font-semibold truncate">
                         {getConversationName(conversation)}
                       </h4>
                       {conversation.lastMessage && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(
                             new Date(conversation.lastMessage.createdAt),
                             { addSuffix: false }
@@ -179,11 +177,11 @@ export function ConversationList({
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-muted-foreground truncate">
                         {conversation.lastMessage?.content || 'No messages yet'}
                       </p>
                       {unreadCount > 0 && (
-                        <Badge className="ml-2 bg-[#00a884] hover:bg-[#00a884]/90">
+                        <Badge className="ml-2">
                           {unreadCount}
                         </Badge>
                       )}

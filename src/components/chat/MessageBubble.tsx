@@ -1,15 +1,27 @@
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Message } from '@/types/chat';
 import { formatDistanceToNow } from 'date-fns';
-import { File, Download } from 'lucide-react';
+import { File, Download, MoreVertical, Edit, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
+  onEdit?: (messageId: string, newContent: string) => void;
+  onDelete?: (messageId: string) => void;
 }
 
-export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, onEdit, onDelete }: MessageBubbleProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.content);
   const renderContent = () => {
     switch (message.type) {
       case 'image':
@@ -25,7 +37,6 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         );
       
       case 'audio':
-      case 'voice':
         return (
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -59,27 +70,97 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
     }
   };
 
+  const handleSaveEdit = () => {
+    if (editContent.trim() && onEdit) {
+      onEdit(message.id, editContent.trim());
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditContent(message.content);
+    setIsEditing(false);
+  };
+
   return (
-    <div className={`mb-3 flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+    <div className={`mb-3 flex group ${isOwn ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-md px-4 py-2 rounded-lg shadow ${
+        className={`max-w-md px-4 py-2 rounded-lg shadow relative ${
           isOwn
-            ? 'bg-green-500 text-white rounded-br-none'
-            : 'bg-white text-gray-900 rounded-bl-none'
+            ? 'bg-primary text-primary-foreground rounded-br-none'
+            : 'bg-muted rounded-bl-none'
         }`}
       >
+        {/* Edit/Delete Menu (only for own messages) */}
+        {isOwn && !isEditing && (
+          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full">
+                  <MoreVertical className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onDelete && onDelete(message.id)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
         {!isOwn && message.senderName && (
-          <p className="text-xs font-semibold text-green-600 mb-1">
+          <p className="text-xs font-semibold text-primary mb-1">
             {message.senderName}
           </p>
         )}
-        {renderContent()}
-        <div className={`text-xs mt-1 ${isOwn ? 'text-green-100' : 'text-gray-500'}`}>
-          {new Date(message.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </div>
+        
+        {isEditing ? (
+          <div className="space-y-2">
+            <Input
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSaveEdit();
+                } else if (e.key === 'Escape') {
+                  handleCancelEdit();
+                }
+              }}
+              className="text-sm"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveEdit}>
+                <Check className="h-3 w-3 mr-1" />
+                Save
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                <X className="h-3 w-3 mr-1" />
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {renderContent()}
+            <div className={`text-xs mt-1 ${isOwn ? 'opacity-70' : 'text-muted-foreground'}`}>
+              {new Date(message.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
