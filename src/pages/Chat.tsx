@@ -29,7 +29,7 @@ export default function Chat() {
 
   return (
     <DashboardLayout>
-      <div className="fixed top-0 left-0 right-0 bottom-0 lg:left-64 overflow-hidden -m-4 md:-m-6 lg:-m-8 lg:mt-0">
+      <div className="-m-4 md:-m-6 lg:-m-8 h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
         <div className="h-full flex overflow-hidden">
           {/* Conversation List - Fixed height, internal scroll */}
           <div className={`w-full md:w-96 border-r bg-card ${selectedConversation ? 'hidden md:flex' : 'flex'} flex-col overflow-hidden`}>
