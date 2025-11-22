@@ -1,14 +1,14 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import { authenticateToken } from '../middleware/auth.js';
-import { getDb } from '../db.js';
+import { getDatabase } from '../db.js';
 
 const router = express.Router();
 
 // Initiate a call
 router.post('/initiate', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const io = req.app.get('io');
     const userId = req.user.userId;
     const { conversationId, type } = req.body;
@@ -66,7 +66,7 @@ router.post('/initiate', authenticateToken, async (req, res) => {
 // Join a call
 router.post('/:id/join', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const io = req.app.get('io');
     const callId = req.params.id;
     const userId = req.user.userId;
@@ -112,7 +112,7 @@ router.post('/:id/join', authenticateToken, async (req, res) => {
 // End a call
 router.post('/:id/end', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const io = req.app.get('io');
     const callId = req.params.id;
     const userId = req.user.userId;

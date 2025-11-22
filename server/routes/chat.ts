@@ -1,14 +1,14 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import { authenticateToken } from '../middleware/auth.js';
-import { getDb } from '../db.js';
+import { getDatabase } from '../db.js';
 
 const router = express.Router();
 
 // Get all conversations for current user
 router.get('/conversations', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const userId = req.user.userId;
 
     const conversations = await db
@@ -53,7 +53,7 @@ router.get('/conversations', authenticateToken, async (req, res) => {
 // Create a new conversation
 router.post('/conversations', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const { type, participantIds, name, description } = req.body;
     const userId = req.user.userId;
 
@@ -126,7 +126,7 @@ router.post('/conversations', authenticateToken, async (req, res) => {
 // Get messages for a conversation
 router.get('/conversations/:id/messages', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const conversationId = req.params.id;
     const userId = req.user.userId;
 
@@ -161,7 +161,7 @@ router.get('/conversations/:id/messages', authenticateToken, async (req, res) =>
 // Send a message
 router.post('/conversations/:id/messages', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const io = req.app.get('io');
     const conversationId = req.params.id;
     const userId = req.user.userId;
@@ -223,7 +223,7 @@ router.post('/conversations/:id/messages', authenticateToken, async (req, res) =
 // Mark messages as read
 router.post('/conversations/:id/read', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const conversationId = req.params.id;
     const userId = req.user.userId;
 
@@ -262,7 +262,7 @@ router.post('/conversations/:id/read', authenticateToken, async (req, res) => {
 // Add participants to group
 router.post('/conversations/:id/participants', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const conversationId = req.params.id;
     const userId = req.user.userId;
     const { participantIds } = req.body;
@@ -314,7 +314,7 @@ router.post('/conversations/:id/participants', authenticateToken, async (req, re
 // Remove participant from group
 router.delete('/conversations/:id/participants/:participantId', authenticateToken, async (req, res) => {
   try {
-    const db = getDb();
+    const db = await getDatabase();
     const conversationId = req.params.id;
     const participantId = req.params.participantId;
     const userId = req.user.userId;
