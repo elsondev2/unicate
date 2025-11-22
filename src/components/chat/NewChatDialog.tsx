@@ -71,10 +71,10 @@ export function NewChatDialog({ open, onClose, mode, onSuccess }: NewChatDialogP
       // Filter based on role permissions
       if (userRole === 'STUDENT') {
         // Students can only chat with other students
-        data = data.filter((u) => u.role === 'STUDENT' && u._id !== user?.id);
+        data = data.filter((u) => u.role === 'STUDENT' && u._id !== user?._id);
       } else {
         // Teachers can chat with anyone
-        data = data.filter((u) => u._id !== user?.id);
+        data = data.filter((u) => u._id !== user?._id);
       }
       
       setUsers(data);

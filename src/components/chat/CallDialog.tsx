@@ -119,7 +119,7 @@ export function CallDialog({ conversation, callType, onClose }: CallDialogProps)
       return conversation.name || 'Group Call';
     }
     const otherParticipant = conversation.participants.find(
-      (p) => p.userId !== user?.id
+      (p) => p.userId !== user?._id
     );
     return otherParticipant?.userName || 'Call';
   };
